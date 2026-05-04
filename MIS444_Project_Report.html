@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIS444 — Telecom Churn Prediction Report</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2333;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #f78166;
+    --accent4: #d2a679;
+    --warn: #e3b341;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --red: #f85149;
+    --green: #3fb950;
+    --yellow: #e3b341;
+    --purple: #bc8cff;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; font-size:15px; line-height:1.7; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a2030 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 60px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content:'';
+    position:absolute; top:-80px; right:-80px;
+    width:300px; height:300px;
+    background: radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%);
+    border-radius:50%;
+  }
+  header::after {
+    content:'';
+    position:absolute; bottom:-60px; left:200px;
+    width:200px; height:200px;
+    background: radial-gradient(circle, rgba(63,185,80,0.06) 0%, transparent 70%);
+    border-radius:50%;
+  }
+  .header-tag { font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; }
+  header h1 { font-family:'DM Serif Display',serif; font-size:36px; color:var(--text); line-height:1.2; margin-bottom:8px; }
+  header h1 span { color:var(--accent); }
+  .header-sub { color:var(--text2); font-size:14px; margin-bottom:24px; }
+  .header-pills { display:flex; gap:10px; flex-wrap:wrap; }
+  .pill { background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 14px; font-size:12px; color:var(--text2); font-family:'DM Mono',monospace; }
+  .pill.green { border-color:rgba(63,185,80,0.4); color:var(--green); background:rgba(63,185,80,0.08); }
+  .pill.blue { border-color:rgba(88,166,255,0.4); color:var(--accent); background:rgba(88,166,255,0.08); }
+  .pill.yellow { border-color:rgba(227,179,65,0.4); color:var(--yellow); background:rgba(227,179,65,0.08); }
+
+  /* NAV TABS */
+  .tab-nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .tab-nav::-webkit-scrollbar { display:none; }
+  .tab-btn {
+    padding: 16px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display:flex; align-items:center; gap:7px;
+  }
+  .tab-btn:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+  .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); background:rgba(88,166,255,0.05); }
+  .tab-num { font-family:'DM Mono',monospace; font-size:10px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+  .tab-btn.active .tab-num { background:rgba(88,166,255,0.15); border-color:rgba(88,166,255,0.4); color:var(--accent); }
+
+  /* CONTENT */
+  .tab-content { display:none; padding:50px 60px; max-width:1100px; }
+  .tab-content.active { display:block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+
+  /* SECTION HEADER */
+  .sec-header { margin-bottom:36px; }
+  .sec-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+  .sec-title { font-family:'DM Serif Display',serif; font-size:28px; color:var(--text); margin-bottom:10px; }
+  .sec-desc { color:var(--text2); font-size:14px; max-width:700px; line-height:1.8; }
+
+  /* CARDS */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:24px; margin-bottom:20px; }
+  .card-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .card-title .icon { font-size:16px; }
+
+  /* OBJECTIVE BOX */
+  .objective-box { background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.25); border-left:4px solid var(--accent); border-radius:8px; padding:20px 24px; margin-bottom:24px; }
+  .objective-box h3 { color:var(--accent); font-size:13px; font-weight:600; margin-bottom:10px; font-family:'DM Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
+  .objective-box p { color:var(--text2); font-size:14px; line-height:1.8; }
+
+  /* FINDING BOX */
+  .finding-box { background:rgba(63,185,80,0.06); border:1px solid rgba(63,185,80,0.25); border-left:4px solid var(--green); border-radius:8px; padding:20px 24px; margin-bottom:24px; }
+  .finding-box h3 { color:var(--green); font-size:13px; font-weight:600; margin-bottom:10px; font-family:'DM Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
+
+  /* WARNING BOX */
+  .warn-box { background:rgba(227,179,65,0.06); border:1px solid rgba(227,179,65,0.25); border-left:4px solid var(--yellow); border-radius:8px; padding:18px 24px; margin-bottom:20px; }
+  .warn-box h3 { color:var(--yellow); font-size:12px; font-weight:600; margin-bottom:8px; font-family:'DM Mono',monospace; letter-spacing:1px; text-transform:uppercase; }
+
+  /* CODE BLOCK */
+  .code-block { background:#010409; border:1px solid var(--border); border-radius:8px; padding:20px; margin:14px 0; font-family:'DM Mono',monospace; font-size:12.5px; line-height:1.8; overflow-x:auto; position:relative; }
+  .code-block .code-label { position:absolute; top:10px; right:14px; font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; }
+  .kw { color:#ff7b72; }
+  .fn { color:#d2a679; }
+  .st { color:#a5d6ff; }
+  .cm { color:#8b949e; font-style:italic; }
+  .num { color:#79c0ff; }
+  .var { color:#ffa657; }
+
+  /* EXPLANATION BLOCK */
+  .explain { margin:16px 0; }
+  .explain-title { font-size:13px; font-weight:600; color:var(--accent4); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .explain-body { color:var(--text2); font-size:13.5px; line-height:1.8; padding-left:16px; border-left:2px solid var(--border); }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:13px; }
+  th { background:var(--surface2); color:var(--text); font-weight:600; padding:10px 14px; text-align:left; border:1px solid var(--border); }
+  td { padding:9px 14px; border:1px solid var(--border); color:var(--text2); }
+  tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+  td.good { color:var(--green); }
+  td.warn { color:var(--yellow); }
+  td.bad { color:var(--red); }
+  td code { font-family:'DM Mono',monospace; font-size:11px; background:var(--surface2); padding:1px 5px; border-radius:3px; color:var(--accent); }
+
+  /* GRID */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin:16px 0; }
+
+  /* STAT CARD */
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; text-align:center; }
+  .stat-val { font-family:'DM Serif Display',serif; font-size:28px; color:var(--accent); margin-bottom:4px; }
+  .stat-val.green { color:var(--green); }
+  .stat-val.yellow { color:var(--yellow); }
+  .stat-val.red { color:var(--red); }
+  .stat-label { font-size:12px; color:var(--text2); }
+
+  /* MODEL CARD */
+  .model-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; margin-bottom:14px; display:flex; gap:16px; align-items:flex-start; }
+  .model-icon { font-size:28px; min-width:44px; text-align:center; }
+  .model-name { font-weight:600; color:var(--text); margin-bottom:4px; }
+  .model-how { font-size:13px; color:var(--text2); margin-bottom:8px; line-height:1.7; }
+  .model-why { font-size:12px; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.2); border-radius:6px; padding:6px 10px; display:inline-block; }
+
+  /* METRIC CARD */
+  .metric-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin:16px 0; }
+  .metric-box { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; text-align:center; }
+  .metric-name { font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; margin-bottom:6px; text-transform:uppercase; }
+  .metric-val { font-family:'DM Serif Display',serif; font-size:22px; }
+  .metric-box.primary { border-color:rgba(88,166,255,0.4); background:rgba(88,166,255,0.06); }
+  .metric-box.primary .metric-val { color:var(--accent); }
+
+  /* FLOW */
+  .flow { display:flex; align-items:center; gap:0; margin:20px 0; flex-wrap:wrap; }
+  .flow-step { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 16px; font-size:13px; color:var(--text2); }
+  .flow-arrow { color:var(--text3); padding:0 8px; font-size:18px; }
+
+  /* HIGHLIGHT */
+  .hl { color:var(--accent); font-weight:600; }
+  .hl-g { color:var(--green); font-weight:600; }
+  .hl-y { color:var(--yellow); font-weight:600; }
+  .hl-r { color:var(--red); font-weight:600; }
+
+  /* STEP */
+  .step { display:flex; gap:14px; margin-bottom:18px; }
+  .step-num { min-width:28px; height:28px; background:var(--surface2); border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; color:var(--accent); margin-top:2px; }
+  .step-body { flex:1; }
+  .step-title { font-weight:600; color:var(--text); margin-bottom:4px; font-size:14px; }
+  .step-desc { color:var(--text2); font-size:13px; line-height:1.7; }
+
+  /* DIVIDER */
+  hr { border:none; border-top:1px solid var(--border); margin:30px 0; }
+
+  /* QUOTE */
+  blockquote { border-left:3px solid var(--accent); padding:12px 18px; margin:16px 0; color:var(--text2); font-size:14px; background:rgba(88,166,255,0.04); border-radius:0 6px 6px 0; font-style:italic; }
+
+  /* CONFUSION MATRIX VIZ */
+  .cm-grid { display:grid; grid-template-columns:1fr 1fr; gap:3px; max-width:340px; margin:16px 0; }
+  .cm-cell { padding:18px; text-align:center; border-radius:6px; }
+  .cm-cell.tn { background:rgba(63,185,80,0.12); border:1px solid rgba(63,185,80,0.3); }
+  .cm-cell.fp { background:rgba(227,179,65,0.1); border:1px solid rgba(227,179,65,0.3); }
+  .cm-cell.fn { background:rgba(248,81,73,0.15); border:1px solid rgba(248,81,73,0.4); }
+  .cm-cell.tp { background:rgba(88,166,255,0.12); border:1px solid rgba(88,166,255,0.3); }
+  .cm-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); margin-bottom:4px; }
+  .cm-name { font-size:13px; font-weight:600; }
+  .cm-desc { font-size:11px; color:var(--text2); margin-top:3px; }
+
+  @media(max-width:768px) {
+    .tab-content { padding:30px 20px; }
+    header { padding:30px 20px; }
+    .tab-nav { padding:0 10px; }
+    .grid-2, .grid-3, .metric-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-tag">MIS444 · Predictive Analytics in Business</div>
+  <h1>Telecom Customer <span>Churn Prediction</span></h1>
+  <div class="header-sub">End-to-end Machine Learning Project Report · 8 Models · 7,043 Customers · 38 Features</div>
+  <div class="header-pills">
+    <span class="pill blue">Classification Problem</span>
+    <span class="pill green">7,043 Rows</span>
+    <span class="pill green">38 Features</span>
+    <span class="pill yellow">26.5% Churn Rate</span>
+    <span class="pill blue">8 ML Models</span>
+    <span class="pill green">SMOTE + Tuning</span>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('intro')">📋 Overview</button>
+  <button class="tab-btn" onclick="showTab('s1')"><span class="tab-num">S1</span> Libraries</button>
+  <button class="tab-btn" onclick="showTab('s2')"><span class="tab-num">S2</span> Preprocessing</button>
+  <button class="tab-btn" onclick="showTab('s3')"><span class="tab-num">S3</span> EDA</button>
+  <button class="tab-btn" onclick="showTab('s4')"><span class="tab-num">S4</span> Feature Selection</button>
+  <button class="tab-btn" onclick="showTab('s5')"><span class="tab-num">S5</span> Model Building</button>
+  <button class="tab-btn" onclick="showTab('s6')"><span class="tab-num">S6</span> Optimization</button>
+  <button class="tab-btn" onclick="showTab('s7')"><span class="tab-num">S7</span> Evaluation</button>
+  <button class="tab-btn" onclick="showTab('s8')"><span class="tab-num">S8</span> Business Insights</button>
+  <button class="tab-btn" onclick="showTab('s9')"><span class="tab-num">S9</span> Conclusion</button>
+</nav>
+
+<!-- ==================== OVERVIEW ==================== -->
+<div id="intro" class="tab-content active">
+  <div class="sec-header">
+    <div class="sec-label">Project Overview</div>
+    <div class="sec-title">Predicting Customer Churn with Machine Learning</div>
+    <div class="sec-desc">A complete end-to-end predictive analytics project applying 8 machine learning algorithms to identify at-risk telecom customers before they leave.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Business Problem</h3>
+    <p>Customer churn — when a customer stops using a service — costs telecom companies millions annually. Acquiring a new customer costs <strong style="color:var(--accent)">5–7× more</strong> than retaining an existing one. This project builds a predictive system to identify which customers are likely to churn <em>before</em> they leave, enabling proactive retention.</p>
+  </div>
+
+  <div class="grid-3">
+    <div class="stat"><div class="stat-val">7,043</div><div class="stat-label">Total Customers</div></div>
+    <div class="stat"><div class="stat-val">38</div><div class="stat-label">Features</div></div>
+    <div class="stat"><div class="stat-val yellow">26.5%</div><div class="stat-label">Churn Rate</div></div>
+  </div>
+  <div class="grid-3">
+    <div class="stat"><div class="stat-val green">8</div><div class="stat-label">ML Models Trained</div></div>
+    <div class="stat"><div class="stat-val">15</div><div class="stat-label">Features Selected (RFE)</div></div>
+    <div class="stat"><div class="stat-val green">50</div><div class="stat-label">Hyperparameter Trials</div></div>
+  </div>
+
+  <hr>
+  <div class="card">
+    <div class="card-title"><span class="icon">🗺️</span> Project Workflow</div>
+    <div class="flow">
+      <div class="flow-step">📦 Data Loading</div><div class="flow-arrow">→</div>
+      <div class="flow-step">🔧 Preprocessing</div><div class="flow-arrow">→</div>
+      <div class="flow-step">📊 EDA</div><div class="flow-arrow">→</div>
+      <div class="flow-step">🔬 Feature Selection</div><div class="flow-arrow">→</div>
+      <div class="flow-step">🤖 Model Building</div><div class="flow-arrow">→</div>
+      <div class="flow-step">⚙️ Optimization</div><div class="flow-arrow">→</div>
+      <div class="flow-step">📏 Evaluation</div><div class="flow-arrow">→</div>
+      <div class="flow-step">💼 Business Insights</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📂</span> Dataset Overview</div>
+    <table>
+      <tr><th>Property</th><th>Details</th></tr>
+      <tr><td>Source</td><td>Telecom Customer Churn Dataset (Kaggle)</td></tr>
+      <tr><td>Total Rows</td><td class="good">7,043 customers</td></tr>
+      <tr><td>Total Columns</td><td>38 features</td></tr>
+      <tr><td>Target Variable</td><td><code>Customer Status</code> → Churn (1) / Retained (0)</td></tr>
+      <tr><td>Churned</td><td class="warn">1,869 (26.5%)</td></tr>
+      <tr><td>Retained</td><td class="good">5,174 (73.5%)</td></tr>
+      <tr><td>Feature Types</td><td>Demographic, Service, Contract, Billing</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Project Objectives</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Understand Churn Drivers</div><div class="step-desc">Use EDA to identify which features (contract type, tenure, monthly charge) most strongly predict churn.</div></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Build & Compare 8 Models</div><div class="step-desc">Train diverse algorithms and rank them by F1-Score to find the best churn predictor.</div></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Optimize Best Models</div><div class="step-desc">Apply SMOTE for class imbalance and RandomizedSearchCV for hyperparameter tuning.</div></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Translate to Business Value</div><div class="step-desc">Convert model predictions into revenue at risk, risk tiers, and retention ROI calculations.</div></div></div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 1 ==================== -->
+<div id="s1" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 1</div>
+    <div class="sec-title">Libraries & Data Loading</div>
+    <div class="sec-desc">Setting up all required tools and performing initial inspection of the raw dataset.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>Before any analysis, we must load the right tools and understand what the raw data looks like. This section answers: <strong>What data do we have? How many rows? What columns? Are there missing values? Is the target balanced?</strong> Every decision in later sections depends on what we find here.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Why These Libraries?</div>
+    <table>
+      <tr><th>Library</th><th>Purpose</th><th>Used For</th></tr>
+      <tr><td><code>pandas</code></td><td>Data manipulation</td><td>Loading CSV, filtering, groupby, DataFrames</td></tr>
+      <tr><td><code>numpy</code></td><td>Numerical computing</td><td>Array operations, math, masks</td></tr>
+      <tr><td><code>matplotlib</code></td><td>Base plotting</td><td>Creating figures, axes, bar charts</td></tr>
+      <tr><td><code>seaborn</code></td><td>Statistical visualization</td><td>Heatmaps, boxplots, histograms</td></tr>
+      <tr><td><code>sklearn</code></td><td>Machine learning</td><td>Models, preprocessing, metrics, RFE</td></tr>
+      <tr><td><code>xgboost</code></td><td>Gradient boosting</td><td>XGBClassifier — our top model</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💻</span> Key Code Explanations</div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 plt.rcParams['figure.figsize'] = (12, 8)</div>
+      <div class="explain-body">
+        <strong>What:</strong> Sets the default figure size for ALL plots globally.<br>
+        <strong>Why:</strong> Without this, matplotlib defaults to (6.4, 4.8) — too small for complex charts. By setting it globally, we don't repeat <code>figsize=</code> in every single plot.<br>
+        <strong>rcParams</strong> = Runtime Configuration Parameters — a dictionary controlling all of matplotlib's default settings.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 from sklearn.metrics import (...) ConfusionMatrixDisplay, roc_curve</div>
+      <div class="explain-body">
+        <strong>What:</strong> Importing specific evaluation tools from scikit-learn.<br>
+        <strong>Why each one:</strong> <code>accuracy_score</code> → overall correct %, <code>precision_score</code> → of predicted churners how many really churned, <code>recall_score</code> → of real churners how many did we catch, <code>f1_score</code> → harmonic mean balancing precision & recall, <code>roc_auc_score</code> → discrimination power, <code>ConfusionMatrixDisplay</code> → visual matrix, <code>roc_curve</code> → computes ROC curve points.<br>
+        <strong>Why import only specific items:</strong> Memory efficiency — we only load what we need.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 df['Customer Status'].value_counts(normalize=True).mul(100).round(2).astype(str) + '%'</div>
+      <div class="explain-body">
+        <strong>What:</strong> A method chain computing percentage distribution of the target variable.<br>
+        <strong>Step by step:</strong><br>
+        <code>value_counts()</code> → raw counts: Stayed=4720, Churned=1869<br>
+        <code>normalize=True</code> → proportions: 0.670, 0.265<br>
+        <code>.mul(100)</code> → percentages: 67.0, 26.5<br>
+        <code>.round(2)</code> → 2 decimal places<br>
+        <code>.astype(str) + '%'</code> → "67.02%", "26.54%"<br>
+        <strong>Why it matters:</strong> Reveals the 73.5% vs 26.5% class imbalance which directly motivates SMOTE in Section 6.
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Section 1 Findings</h3>
+    <table>
+      <tr><th>Check</th><th>Result</th><th>Implication</th></tr>
+      <tr><td>Shape</td><td class="good">7,043 rows × 38 cols</td><td>Rich dataset, sufficient for ML</td></tr>
+      <tr><td>Missing Values</td><td class="warn">Yes — service columns</td><td>Domain-knowledge imputation needed</td></tr>
+      <tr><td>Duplicates</td><td class="good">0</td><td>Data integrity confirmed</td></tr>
+      <tr><td>Target Balance</td><td class="warn">73.5% vs 26.5%</td><td>Class imbalance → SMOTE required</td></tr>
+      <tr><td>Data Types</td><td class="warn">Mixed (object + numeric)</td><td>Encoding required before modeling</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== SECTION 2 ==================== -->
+<div id="s2" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 2</div>
+    <div class="sec-title">Data Preprocessing</div>
+    <div class="sec-desc">Transforming raw messy data into a clean, numerical, ML-ready format while preserving business meaning.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>Machine learning algorithms are mathematical operations — they cannot handle text, missing values, or features with wildly different scales. This section fixes all data quality issues: removes noise, imputes missing values with domain knowledge, encodes categories, and scales numerics so no single feature dominates training.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🔧</span> Preprocessing Pipeline</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Drop Irrelevant & Leakage Columns</div><div class="step-desc">Remove Customer ID, location columns (Zip, Lat, Long, City), and critically — Churn Category and Churn Reason which only exist for customers who already churned (data leakage).</div></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Create Binary Target Variable</div><div class="step-desc">Convert Customer Status (3 values: Stayed, Churned, Joined) into binary: Churned=1, Stayed/Joined=0. Joined customers are new and haven't had opportunity to churn.</div></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Handle Missing Values</div><div class="step-desc">Domain-knowledge imputation: 'No Internet' for internet service columns, 'No Phone Service' for phone columns, 'No Offer' for offer column.</div></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Encode Categorical Variables</div><div class="step-desc">Label Encoding for binary Yes/No columns, One-Hot Encoding for multi-class columns (Contract, Payment Method, Internet Type).</div></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><div class="step-title">Feature Scaling</div><div class="step-desc">StandardScaler normalizes all numeric columns to mean=0, std=1 so large-range features like Total Revenue don't dominate distance-based algorithms.</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💻</span> Key Code Explanations</div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 df[col].fillna('No Internet') — Why not mean/mode?</div>
+      <div class="explain-body">
+        <strong>What:</strong> Filling 1,526 missing values in internet-related columns.<br>
+        <strong>Why 'No Internet' specifically:</strong> These values aren't missing randomly — they're missing BECAUSE those customers don't have internet service. Filling with the mode (e.g., "Fiber Optic") would falsely claim 1,526 customers have Fiber Optic service — completely wrong and would mislead the model.<br>
+        <strong>This is called MNAR</strong> — Missing Not At Random. Always impute MNAR with domain-knowledge values, never statistical ones.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 df['Multiple Lines'].fillna('No Phone Service')</div>
+      <div class="explain-body">
+        <strong>Same logic:</strong> 682 customers without phone service can't have multiple lines. 'No Phone Service' is the factually correct fill value.<br>
+        <strong>Three fill strategies used:</strong><br>
+        • Offer → 'No Offer' (no promotional offer was given)<br>
+        • Internet cols → 'No Internet' (no internet subscription)<br>
+        • Phone cols → 'No Phone Service' / 0 (no phone subscription)
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 df[numeric_cols] = scaler.fit_transform(df[numeric_cols])</div>
+      <div class="explain-body">
+        <strong>What StandardScaler does:</strong> z = (x − mean) / std_deviation<br>
+        After scaling: every numeric column has mean=0 and std=1.<br>
+        <strong>Why it's needed:</strong> Before scaling, Total Revenue ranges $21–$8,684 while Age ranges 19–80. Without scaling, algorithms like Logistic Regression and KNN treat Total Revenue as 100× more important than Age — purely because of scale, not actual predictive power.<br>
+        <strong>fit_transform():</strong> fit() learns mean & std from data, transform() applies the formula. Combined into one step.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 LabelEncoder vs get_dummies — When to use which?</div>
+      <div class="explain-body">
+        <strong>LabelEncoder</strong> for binary columns (Yes/No → 0/1): Only 2 values, clean and compact.<br>
+        <strong>get_dummies (One-Hot)</strong> for multi-class (Contract, Payment Method): Creates separate binary columns for each category.<br>
+        <strong>drop_first=True:</strong> Avoids the dummy variable trap — if you know One Year=0 and Two Year=0, you automatically know it's Month-to-Month. Keeping all 3 creates perfect multicollinearity.
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <h3>⚠️ Data Leakage Warning</h3>
+    <p style="color:var(--text2); font-size:13px; line-height:1.7;">Churn Category and Churn Reason were dropped because they only exist for customers who already churned. Using them would give the model information it wouldn't have when predicting future churn — like giving a student the answer sheet before the exam. This is called <strong style="color:var(--yellow)">data leakage</strong> and produces artificially inflated metrics that collapse in production.</p>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Section 2 Results</h3>
+    <div class="grid-3">
+      <div class="stat"><div class="stat-val green">0</div><div class="stat-label">Missing Values Remaining</div></div>
+      <div class="stat"><div class="stat-val green">0</div><div class="stat-label">Duplicate Rows</div></div>
+      <div class="stat"><div class="stat-val">~35</div><div class="stat-label">Final Feature Count</div></div>
+    </div>
+    <p style="color:var(--text2); font-size:13px; margin-top:12px;">All features are now numeric. The dataset is clean, encoded, and scaled — fully ready for feature selection and model training.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3 ==================== -->
+<div id="s3" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 3</div>
+    <div class="sec-title">Exploratory Data Analysis (EDA)</div>
+    <div class="sec-desc">Visually discovering patterns, relationships, and churn signals before building any model.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>EDA answers the question: <strong>"What does the data tell us about why customers churn?"</strong> We visualize 8 key relationships to discover which features drive churn, validate our preprocessing, and build business hypotheses that will be confirmed by the model in later sections.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> 8 Visualizations & Their Purpose</div>
+    <table>
+      <tr><th>#</th><th>Plot</th><th>Type</th><th>Business Question</th></tr>
+      <tr><td>1</td><td>Churn Distribution</td><td>Bar + Pie</td><td>How bad is the churn problem?</td></tr>
+      <tr><td>2</td><td>Churn by Contract</td><td>Bar chart</td><td>Does contract commitment reduce churn?</td></tr>
+      <tr><td>3</td><td>Churn by Internet Type</td><td>Bar chart</td><td>Which service has the highest churn rate?</td></tr>
+      <tr><td>4</td><td>Churn by Payment Method</td><td>Bar chart</td><td>Does payment behavior predict loyalty?</td></tr>
+      <tr><td>5</td><td>Tenure vs Churn</td><td>Boxplot</td><td>When do customers leave?</td></tr>
+      <tr><td>6</td><td>Monthly Charge vs Churn</td><td>Boxplot</td><td>Does price drive churn?</td></tr>
+      <tr><td>7</td><td>Age Distribution</td><td>Histogram+KDE</td><td>Which age group churns most?</td></tr>
+      <tr><td>8</td><td>Correlation Heatmap</td><td>Heatmap</td><td>Which numeric features correlate with churn?</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💻</span> Key Code Explanations</div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 Why we reload df_eda = pd.read_csv("telecom_customer_churn.csv")</div>
+      <div class="explain-body">
+        After Section 2 encoding, the original Contract column no longer exists — it's been split into Contract_One Year, Contract_Two Year etc. A chart showing "Contract_Two Year = 45%" is meaningless to a business stakeholder. By reloading the original CSV we get human-readable labels like "Month-to-Month" and "Fiber Optic" for our charts.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 groupby('Contract')['Churn'].mean().mul(100) — How it computes churn rate</div>
+      <div class="explain-body">
+        <code>.groupby('Contract')</code> → groups rows by contract type<br>
+        <code>['Churn']</code> → selects the binary Churn column (0s and 1s)<br>
+        <code>.mean()</code> → mean of 0s and 1s = proportion of 1s = <strong>churn rate</strong><br>
+        <code>.mul(100)</code> → converts 0.46 to 46%<br>
+        This is a powerful trick: mean of a binary column = proportion of the positive class.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 mask = np.triu(np.ones_like(corr, dtype=bool)) — Correlation heatmap mask</div>
+      <div class="explain-body">
+        The correlation matrix is perfectly symmetrical: Correlation(A,B) = Correlation(B,A). Showing both triangles doubles the information needlessly.<br>
+        <code>np.ones_like(corr, dtype=bool)</code> → creates a matrix of True values same shape as corr<br>
+        <code>np.triu()</code> → keeps True only in the upper triangle<br>
+        <code>mask=mask</code> in heatmap → hides cells where mask=True<br>
+        Result: only the lower triangle is shown — clean and readable.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 sns.boxplot — What a boxplot shows and why it's used here</div>
+      <div class="explain-body">
+        A boxplot shows: median (middle line), Q1–Q3 range (box), whiskers (1.5×IQR), and outliers (dots). It's ideal for comparing two groups (churned vs retained) because it shows the full distribution summary side-by-side without clutter. A histogram would be harder to compare across groups.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 kde=True in histplot — What KDE means</div>
+      <div class="explain-body">
+        KDE = Kernel Density Estimation. It smooths the histogram bars into a continuous probability curve showing where values are most concentrated. Instead of discrete bins it shows the shape of the distribution — much better for comparing the age patterns of churned vs retained customers.
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Key EDA Findings</h3>
+    <table>
+      <tr><th>Finding</th><th>Value</th><th>Business Implication</th></tr>
+      <tr><td>Month-to-Month churn rate</td><td class="warn">~46%</td><td>Contract upgrades are the #1 priority</td></tr>
+      <tr><td>Two-Year contract churn rate</td><td class="good">~3%</td><td>Long contracts = loyalty commitment</td></tr>
+      <tr><td>Churned median tenure</td><td class="warn">~10 months</td><td>First year is the critical retention window</td></tr>
+      <tr><td>Churned avg monthly charge</td><td class="warn">~$80</td><td>High-paying customers are most price-sensitive</td></tr>
+      <tr><td>Fiber Optic churn rate</td><td class="warn">~41%</td><td>Premium service = elevated expectations</td></tr>
+      <tr><td>Tenure-Churn correlation</td><td class="good">−0.35</td><td>Longest tenure = most loyal customers</td></tr>
+      <tr><td>Monthly Charge correlation</td><td class="warn">+0.19</td><td>Higher bills = higher churn risk</td></tr>
+    </table>
+    <blockquote>These EDA findings will be independently validated by the ML model in Section 8 — when model feature importance matches EDA patterns, we know the model learned genuine signals.</blockquote>
+  </div>
+</div>
+
+<!-- ==================== SECTION 4 ==================== -->
+<div id="s4" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 4</div>
+    <div class="sec-title">Feature Selection</div>
+    <div class="sec-desc">Identifying the top 15 most predictive features from 35+ using Recursive Feature Elimination.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>After encoding, we have 35+ features. Not all are equally useful — some are redundant, some are noise, and some are genuinely predictive. We use <strong>RFE (Recursive Feature Elimination)</strong> to systematically identify the 15 features that contribute most to predicting churn, reducing overfitting and improving model efficiency.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">❓</span> Why Feature Selection is Critical</div>
+    <div class="grid-2">
+      <div>
+        <p style="color:var(--red); font-size:13px; font-weight:600; margin-bottom:8px;">❌ Without Feature Selection</p>
+        <p style="color:var(--text2); font-size:13px; line-height:1.8;">→ Model trains on 35+ features<br>→ Learns noise and random patterns<br>→ Overfits — great on training, bad on test<br>→ Slower training<br>→ Harder to interpret results</p>
+      </div>
+      <div>
+        <p style="color:var(--green); font-size:13px; font-weight:600; margin-bottom:8px;">✅ With Feature Selection (RFE)</p>
+        <p style="color:var(--text2); font-size:13px; line-height:1.8;">→ Model trains on top 15 features only<br>→ Focuses on genuine churn signals<br>→ Better generalization to new customers<br>→ Faster, more efficient training<br>→ Clear, interpretable importance ranking</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🔬</span> How RFE Works — Step by Step</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Start with all 35+ features</div><div class="step-desc">Train Logistic Regression on all features. Rank each by absolute coefficient value — larger = more important.</div></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Remove the weakest feature</div><div class="step-desc">The feature with the smallest absolute coefficient is eliminated. One feature removed per round (step=1).</div></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Retrain & re-rank</div><div class="step-desc">Train a new model on the remaining features. Rankings can shift when a feature is removed.</div></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Repeat until 15 remain</div><div class="step-desc">After ~20 rounds, only the top 15 most important features survive. These are used for all model training.</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💻</span> Key Code Explanations</div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 LogisticRegression(max_iter=1000, solver='lbfgs', random_state=42) as RFE estimator</div>
+      <div class="explain-body">
+        <strong>Why Logistic Regression for RFE:</strong> It provides coefficients (weights) which RFE uses to rank importance. Fast, stable, and directly interpretable for binary classification.<br>
+        <strong>max_iter=1000:</strong> Default is 100 — not enough for 35+ features to fully converge. We increase to 1000 to avoid ConvergenceWarning errors.<br>
+        <strong>solver='lbfgs':</strong> The optimization algorithm. L-BFGS is the most efficient solver for small-to-medium binary classification datasets.<br>
+        <strong>random_state=42:</strong> Fixed seed ensures the same 15 features are selected every run — reproducibility.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 rfe.support_ and rfe.ranking_ — What they return</div>
+      <div class="explain-body">
+        <code>rfe.support_</code> → Boolean array: True = selected, False = eliminated<br>
+        <code>rfe.ranking_</code> → Integer array: 1 = selected (best), higher = eliminated earlier<br>
+        Example: ranking = [1, 4, 1, 1, 7] — features at positions 0, 2, 3 are in top 15; feature at position 4 was eliminated 7th from the end (weak feature).
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 feature_ranks[...]['Feature'].tolist() — Why .tolist()?</div>
+      <div class="explain-body">
+        <code>.tolist()</code> converts a pandas Series to a plain Python list. This is important because <code>X[pandas_series]</code> can sometimes produce warnings. <code>X[python_list]</code> is always clean and unambiguous for DataFrame column indexing.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 .sort_values('Importance', ascending=True) — Why ascending for a top-features chart?</div>
+      <div class="explain-body">
+        For <code>plt.barh()</code> (horizontal bar chart), matplotlib plots bars from BOTTOM to TOP. Sorting ascending=True (smallest first) means the most important feature ends up at the TOP of the chart where the eye looks first. Sorting descending would flip the chart upside-down.
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Feature Selection Results</h3>
+    <div class="grid-3">
+      <div class="stat"><div class="stat-val warn">35+</div><div class="stat-label">Features Before RFE</div></div>
+      <div class="stat"><div class="stat-val green">15</div><div class="stat-label">Features After RFE</div></div>
+      <div class="stat"><div class="stat-val">57%</div><div class="stat-label">Feature Reduction</div></div>
+    </div>
+    <p style="color:var(--text2); font-size:13px; margin-top:14px; line-height:1.8;">Top selected features align with EDA findings: <span class="hl">Tenure in Months</span>, <span class="hl">Monthly Charge</span>, <span class="hl">Contract Type</span>, and <span class="hl">Number of Referrals</span>. This consistency confirms the algorithm found genuine churn signals — not statistical noise.</p>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5 ==================== -->
+<div id="s5" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 5</div>
+    <div class="sec-title">Model Building</div>
+    <div class="sec-desc">Training and comparing 8 diverse machine learning algorithms to find the best churn predictor.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>We train 8 fundamentally different algorithms on the same data to find which approach best predicts customer churn. Different algorithms make different assumptions about data — by testing diverse approaches, we ensure we find the optimal method rather than arbitrarily committing to one algorithm.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📐</span> Train-Test Split Strategy</div>
+    <div class="grid-2">
+      <div>
+        <p style="color:var(--text2); font-size:13px; line-height:1.9;">
+          <span class="hl">80% Training</span> → 5,634 customers — model learns patterns here<br>
+          <span class="hl">20% Testing</span> → 1,409 customers — model is evaluated here<br>
+          <span class="hl-y">stratify=y</span> → ensures BOTH sets have 26.5% churn rate<br>
+          <span class="hl-g">random_state=42</span> → same split every run (reproducibility)
+        </p>
+      </div>
+      <div class="warn-box" style="margin:0">
+        <h3>⚠️ Why stratify=y is Critical</h3>
+        <p style="color:var(--text2); font-size:12px; line-height:1.7;">Without stratify, random splitting might put most churners in training and very few in test — making evaluation metrics unreliable. stratify=y guarantees both sets reflect the real 26.5% churn rate.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🤖</span> All 8 Models — How They Work & Why Included</div>
+
+    <div class="model-card">
+      <div class="model-icon">📏</div>
+      <div>
+        <div class="model-name">1. Logistic Regression</div>
+        <div class="model-how"><strong>How it works:</strong> Draws a straight decision boundary. Uses the sigmoid function P(Churn) = 1/(1+e^−z) to convert a linear combination of features into a probability. If P > 0.5 → predict Churn=1.</div>
+        <div class="model-why">✅ Baseline model — simplest possible approach. Highly interpretable. If complex models don't beat it, simpler is better.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">👥</div>
+      <div>
+        <div class="model-name">2. K-Nearest Neighbors (KNN)</div>
+        <div class="model-how"><strong>How it works:</strong> For each new customer, finds the 5 most similar customers in training data. Majority vote among those 5 neighbors determines prediction. If 4 of 5 neighbors churned → predict Churn=1.</div>
+        <div class="model-why">✅ Distance-based approach — no assumptions about data distribution. n_neighbors=5 is odd to avoid ties and is the standard starting point.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">🌳</div>
+      <div>
+        <div class="model-name">3. Decision Tree</div>
+        <div class="model-how"><strong>How it works:</strong> Builds a flowchart of if/else rules. Example: IF Tenure &lt; 12 AND Monthly Charge &gt; $75 AND Contract = Month-to-Month → Predict Churn=1. Each split maximizes information gain.</div>
+        <div class="model-why">✅ Most interpretable model — can be visualized as a tree. Typically overfits (high variance) which demonstrates why ensemble methods are needed.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">🌲</div>
+      <div>
+        <div class="model-name">4. Random Forest</div>
+        <div class="model-how"><strong>How it works:</strong> Builds 100 different Decision Trees (n_estimators=100), each trained on a RANDOM subset of rows (bootstrap) and features. Final prediction = majority vote of all 100 trees.</div>
+        <div class="model-why">✅ Ensemble bagging method — 100 trees voting reduces variance. Different random subsets mean trees make different errors which cancel out.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">📈</div>
+      <div>
+        <div class="model-name">5. Gradient Boosting 🏆 Best Model</div>
+        <div class="model-how"><strong>How it works:</strong> Builds trees SEQUENTIALLY. Each new tree focuses on correcting the ERRORS of the previous tree. Tree 1: baseline. Tree 2: learns from Tree 1's mistakes. Tree 3: learns from Tree 2's mistakes. 100 iterations total.</div>
+        <div class="model-why">✅ Sequential error correction is powerful for complex patterns. Our actual best model (65.56% F1). Key difference from Random Forest: sequential not parallel.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">⚡</div>
+      <div>
+        <div class="model-name">6. XGBoost 🥈 Runner-Up</div>
+        <div class="model-how"><strong>How it works:</strong> Extreme Gradient Boosting — same sequential concept as Gradient Boosting but adds L1/L2 regularization, parallel processing, built-in missing value handling, and tree pruning. eval_metric='logloss' uses log loss for probability calibration.</div>
+        <div class="model-why">✅ Industry gold standard for tabular data. Wins most Kaggle competitions with structured data. verbosity=0 suppresses internal logs.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">📐</div>
+      <div>
+        <div class="model-name">7. Support Vector Machine (SVM)</div>
+        <div class="model-how"><strong>How it works:</strong> Finds the OPTIMAL hyperplane that maximizes the margin between churners and retained customers. Support Vectors are the data points closest to the boundary that define it.</div>
+        <div class="model-why">✅ Works well in high-dimensional spaces. probability=True enables predict_proba() needed for ROC-AUC calculation — SVM doesn't natively output probabilities.</div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-icon">🎲</div>
+      <div>
+        <div class="model-name">8. Naive Bayes</div>
+        <div class="model-how"><strong>How it works:</strong> Uses Bayes' Theorem: P(Churn|features) = P(features|Churn) × P(Churn) / P(features). "Naive" = assumes all features are independent. GaussianNB assumes numeric features follow a normal distribution.</div>
+        <div class="model-why">✅ Fastest model. Probabilistic approach contrasts all other models. Surprisingly competitive despite the naive independence assumption.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📏</span> Evaluation Metrics — Why Each One Matters</div>
+    <div class="metric-row">
+      <div class="metric-box"><div class="metric-name">Accuracy</div><div class="metric-val" style="color:var(--text2)">⚠️</div><p style="font-size:11px;color:var(--text3);margin-top:6px">Misleading for imbalanced data</p></div>
+      <div class="metric-box"><div class="metric-name">Precision</div><div class="metric-val" style="color:var(--yellow)">P</div><p style="font-size:11px;color:var(--text3);margin-top:6px">TP/(TP+FP) — fewer false alarms</p></div>
+      <div class="metric-box"><div class="metric-name">Recall</div><div class="metric-val" style="color:var(--accent)">R⭐</div><p style="font-size:11px;color:var(--text3);margin-top:6px">TP/(TP+FN) — catch all churners</p></div>
+      <div class="metric-box primary"><div class="metric-name">F1-Score</div><div class="metric-val">F1⭐</div><p style="font-size:11px;color:var(--text3);margin-top:6px">Primary metric — harmonic mean</p></div>
+      <div class="metric-box"><div class="metric-name">ROC-AUC</div><div class="metric-val" style="color:var(--green)">AUC</div><p style="font-size:11px;color:var(--text3);margin-top:6px">Discrimination power</p></div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 results.append({...}) — Why store results as list of dictionaries?</div>
+      <div class="explain-body">
+        A list of dictionaries is the most natural way to collect tabular results. Each dictionary = one row (one model). <code>pd.DataFrame(results)</code> instantly converts the 8 dictionaries into a proper table — 8 rows × 6 columns. Much cleaner than writing 8 separate variables.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 .sort_values('F1-Score', ascending=False) — Why sort by F1 not Accuracy?</div>
+      <div class="explain-body">
+        A model predicting everyone "Retained" gets 73.5% accuracy without learning anything — accuracy is completely misleading for imbalanced data. F1-Score balances precision and recall, penalizing models that ignore the minority class. It's the honest ranking metric for this problem.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 best_model_name = results_df.iloc[0]['Model'] — Why dynamic not hardcoded?</div>
+      <div class="explain-body">
+        <code>iloc[0]</code> always gets the first row of the sorted DataFrame — which is always the best model. If you change the dataset and XGBoost suddenly beats Gradient Boosting, this code automatically selects XGBoost. Hardcoding 'Gradient Boosting' would silently use the wrong model.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 model.predict() vs model.predict_proba()[:, 1]</div>
+      <div class="explain-body">
+        <code>predict()</code> → hard labels [0, 1, 0, 1] — used for Accuracy, F1, Confusion Matrix<br>
+        <code>predict_proba()[:, 1]</code> → probabilities [0.23, 0.87, 0.41] — used for ROC-AUC, ROC Curve<br>
+        <code>[:, 1]</code> selects column index 1 (churn probability) from the 2-column output [[P(Retain), P(Churn)], ...].
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Section 5 Results</h3>
+    <table>
+      <tr><th>Rank</th><th>Model</th><th>F1-Score</th><th>ROC-AUC</th><th>Insight</th></tr>
+      <tr><td>🥇</td><td>Gradient Boosting</td><td class="good">65.56%</td><td class="good">89.39%</td><td>Sequential error correction wins</td></tr>
+      <tr><td>🥈</td><td>XGBoost</td><td class="good">65.41%</td><td class="good">87.76%</td><td>Regularized boosting close behind</td></tr>
+      <tr><td>3rd</td><td>SVM</td><td>64.81%</td><td>87.36%</td><td>Strong margin separation</td></tr>
+      <tr><td>4th</td><td>Logistic Regression</td><td>64.70%</td><td>88.57%</td><td>Surprisingly strong baseline</td></tr>
+      <tr><td>8th</td><td>Decision Tree</td><td class="bad">57.56%</td><td class="bad">71.33%</td><td>Single tree overfits</td></tr>
+    </table>
+    <blockquote>F1 scores in the 57–66% range confirm class imbalance is suppressing performance. Section 6 will address this directly with SMOTE — expect significant improvement.</blockquote>
+  </div>
+</div>
+
+<!-- ==================== SECTION 6 ==================== -->
+<div id="s6" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 6</div>
+    <div class="sec-title">Model Optimization</div>
+    <div class="sec-desc">Fixing class imbalance with SMOTE and finding optimal hyperparameters with RandomizedSearchCV.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>Two problems limit Section 5 performance: <strong>class imbalance</strong> (73.5% vs 26.5% biases all models) and <strong>default hyperparameters</strong> (models weren't tuned for our specific data). This section fixes both, optimizing the top 2 models to maximize F1-Score.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🧬</span> SMOTE — Synthetic Minority Over-sampling Technique</div>
+    <div class="explain">
+      <div class="explain-title">🔹 Why SMOTE instead of simple oversampling or undersampling?</div>
+      <div class="explain-body">
+        <strong>Random Oversampling:</strong> Duplicates existing minority rows → model memorizes exact duplicates → overfitting<br>
+        <strong>Random Undersampling:</strong> Deletes majority rows → loses valuable training data<br>
+        <strong>SMOTE ✅:</strong> Creates SYNTHETIC new churners by interpolating between real ones — no duplication, no data loss<br><br>
+        <strong>How SMOTE creates synthetic samples:</strong><br>
+        1. Pick a real churner (Customer A)<br>
+        2. Find its K nearest neighbors (other real churners similar to A)<br>
+        3. Randomly pick one neighbor (Customer B)<br>
+        4. Create new synthetic customer anywhere on the LINE between A and B<br>
+        5. New customer = A + random(0,1) × (B − A) → realistic but new!
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 smote = SMOTE(random_state=42) — What random_state does here</div>
+      <div class="explain-body">
+        SMOTE uses randomness to decide which neighbor to interpolate toward. random_state=42 generates the exact same synthetic samples every run. Without it — different synthetic churners each time → inconsistent results.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 X_train_sm, y_train_sm = smote.fit_resample(X_train, y_train)</div>
+      <div class="explain-body">
+        <code>fit()</code> → SMOTE analyzes minority class geometry, finds nearest neighbors<br>
+        <code>resample()</code> → generates synthetic churners until classes are balanced<br>
+        <strong>Result:</strong> Training set goes from 73.5/26.5 → 50/50<br>
+        <strong>Critical:</strong> SMOTE applied to X_train ONLY — test set stays at real 26.5% distribution for honest evaluation.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span> RandomizedSearchCV — Hyperparameter Optimization</div>
+    <div class="explain">
+      <div class="explain-title">🔹 What are hyperparameters and why do they matter?</div>
+      <div class="explain-body">
+        <strong>Model parameters</strong> (learned automatically): feature weights, split thresholds<br>
+        <strong>Hyperparameters</strong> (set by YOU before training): n_estimators, learning_rate, max_depth<br>
+        Default hyperparameters are generic — they don't know your specific data. Tuning finds the combination that maximizes performance on YOUR dataset.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 RandomizedSearchCV vs GridSearchCV</div>
+      <div class="explain-body">
+        <strong>GridSearchCV:</strong> Tests EVERY combination — 4×4×4×4×3×3 = 2,304 combinations. Too slow.<br>
+        <strong>RandomizedSearchCV ✅:</strong> Tests only n_iter=50 RANDOM combinations. Research shows random search finds near-optimal results in far fewer iterations. ~97% faster than grid search.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 Every hyperparameter in gb_param_grid explained</div>
+      <div class="explain-body">
+        <code>n_estimators [100,200,300,500]</code> → how many trees. More = better learning but slower + diminishing returns<br>
+        <code>max_depth [3,4,5,6]</code> → tree depth. Shallow=underfit, deep=overfit. Boosting works best with shallow trees (3-5)<br>
+        <code>learning_rate [0.01,0.05,0.1,0.2]</code> → how much each tree contributes. Low=precise but needs more trees. Inverse relationship with n_estimators<br>
+        <code>subsample [0.7,0.8,0.9,1.0]</code> → fraction of rows per tree. Adds randomness → reduces overfitting<br>
+        <code>min_samples_split [2,5,10]</code> → min samples to split a node. Higher = more conservative = regularization<br>
+        <code>max_features ['sqrt','log2',None]</code> → features considered per split. Restricting adds randomness → less overfitting
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 cv=5 — What 5-fold cross-validation means</div>
+      <div class="explain-body">
+        Splits training data into 5 equal parts. Trains on 4 folds, validates on 1. Repeats 5 times. Averages the 5 F1 scores. This means for 50 iterations × 5 folds = <strong>250 total model fits</strong>. Much more reliable than a single train-val split which could be lucky or unlucky.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 n_jobs=-1 — What this does</div>
+      <div class="explain-body">
+        Uses ALL available CPU cores in parallel. -1 = use every core. The 250 model fits are distributed across all cores simultaneously. Without this, runs on 1 core — potentially 4-8× slower depending on the machine.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 gb_before = results_df[results_df['Model'] == 'Gradient Boosting'].iloc[0]</div>
+      <div class="explain-body">
+        Retrieves pre-optimization scores dynamically from results_df. <code>results_df['Model'] == 'Gradient Boosting'</code> creates a boolean filter. <code>.iloc[0]</code> gets the matching row as a Series. This ensures we compare against exact Section 5 scores — not hardcoded numbers that could be wrong.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 for ax, metric in zip(axes, metrics_to_plot)</div>
+      <div class="explain-body">
+        <code>zip()</code> pairs each subplot axis with its metric name: (ax1,'Accuracy'), (ax2,'F1-Score'), (ax3,'ROC-AUC'). Each loop iteration draws one subplot. Without zip, you'd need to repeat identical bar chart code 3 times — one per metric. Elegant and concise.
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Optimization Results</h3>
+    <div class="grid-2">
+      <div class="stat"><div class="stat-val green">50/50</div><div class="stat-label">Training Balance After SMOTE</div></div>
+      <div class="stat"><div class="stat-val green">↑</div><div class="stat-label">F1-Score Improved</div></div>
+    </div>
+    <p style="color:var(--text2); font-size:13px; margin-top:14px; line-height:1.8;">SMOTE corrected the class imbalance that was suppressing all Section 5 scores. RandomizedSearchCV found optimal tree depth, learning rate, and subsampling settings. The improvement confirms that baseline underperformance was due to <span class="hl-y">class imbalance</span>, not algorithm limitations.</p>
+    <blockquote>SMOTE was applied to training data ONLY — the test set retains its real-world 26.5% churn rate ensuring honest evaluation metrics.</blockquote>
+  </div>
+</div>
+
+<!-- ==================== SECTION 7 ==================== -->
+<div id="s7" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 7</div>
+    <div class="sec-title">Model Evaluation</div>
+    <div class="sec-desc">Rigorous multi-dimensional assessment of the final model — beyond a single accuracy number.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>A single metric never tells the complete story. This section evaluates the final model from multiple angles: per-class classification report, confusion matrix with business cost analysis, precision-recall trade-off across all thresholds, and ROC curve comparison showing optimization impact.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📐</span> Confusion Matrix — Understanding Every Cell</div>
+    <div class="cm-grid">
+      <div class="cm-cell tn"><div class="cm-label">TRUE NEGATIVE</div><div class="cm-name" style="color:var(--green)">TN ✅</div><div class="cm-desc">Retained → Predicted Retained. Correct — no action needed.</div></div>
+      <div class="cm-cell fp"><div class="cm-label">FALSE POSITIVE</div><div class="cm-name" style="color:var(--yellow)">FP ⚠️</div><div class="cm-desc">Retained → Predicted Churned. False alarm — wasted $20 offer.</div></div>
+      <div class="cm-cell fn"><div class="cm-label">FALSE NEGATIVE</div><div class="cm-name" style="color:var(--red)">FN ❌❌</div><div class="cm-desc">Churned → Predicted Retained. MISSED churner — ~$900/year lost.</div></div>
+      <div class="cm-cell tp"><div class="cm-cell-inner"><div class="cm-label">TRUE POSITIVE</div><div class="cm-name" style="color:var(--accent)">TP ✅✅</div><div class="cm-desc">Churned → Predicted Churned. Caught — can intervene!</div></div></div>
+    </div>
+    <div class="warn-box" style="margin-top:16px">
+      <h3>💰 Business Cost Analysis</h3>
+      <p style="color:var(--text2); font-size:13px; line-height:1.7;">
+        <strong>False Negative cost:</strong> ~$75/month × 12 months = <span class="hl-r">~$900/year per missed churner</span><br>
+        <strong>False Positive cost:</strong> ~$20 retention offer = <span class="hl-y">minor cost</span><br>
+        This is why <strong style="color:var(--accent)">Recall</strong> is the most important metric — we'd rather flag 10 false alarms than miss 1 real churner.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💻</span> Key Code Explanations</div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 precision_recall_curve(y_test, final_y_prob)</div>
+      <div class="explain-body">
+        Computes precision and recall at EVERY possible probability threshold — not just 0.5.<br>
+        <strong>Returns:</strong> precision_vals, recall_vals, thresholds arrays.<br>
+        <strong>Why it matters:</strong> The default threshold of 0.5 isn't always optimal. For churn, lowering to 0.35 might increase Recall (catch more churners) at the cost of Precision (more false alarms). This trade-off is quantified by the curve.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 The Precision-Recall Trade-off Explained</div>
+      <div class="explain-body">
+        <strong>Lower threshold (e.g., 0.3):</strong> More customers flagged as churners → Recall↑ (catch more) but Precision↓ (more false alarms)<br>
+        <strong>Higher threshold (e.g., 0.7):</strong> Fewer customers flagged → Precision↑ (more confident) but Recall↓ (miss more churners)<br>
+        <strong>For churn:</strong> We prefer lower thresholds — catching a churner saves $900/year, a false alarm wastes $20. The asymmetric cost justifies accepting more false alarms.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 roc_curve and roc_auc_score — What AUC really means</div>
+      <div class="explain-body">
+        ROC Curve plots True Positive Rate vs False Positive Rate at every threshold. AUC (Area Under Curve) summarizes the full curve in one number.<br>
+        <strong>Intuitive meaning:</strong> AUC = 0.89 means "if you randomly pick one churner and one retained customer, the model correctly ranks the churner as higher risk 89% of the time."<br>
+        <strong>AUC is threshold-independent</strong> — it measures fundamental discrimination power regardless of where you set the decision boundary.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 gb_base_model = models['Gradient Boosting'] — Why this still works</div>
+      <div class="explain-body">
+        ML model objects in Python are stateful. After <code>.fit()</code>, the model stores all learned parameters internally. <code>models['Gradient Boosting']</code> retrieves the already-trained Section 5 model. We can call <code>.predict_proba()</code> on it at any time — it remembers everything it learned.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 Why F1 uses harmonic mean instead of arithmetic mean</div>
+      <div class="explain-body">
+        If Precision=0.90 and Recall=0.10:<br>
+        Arithmetic mean = (0.90+0.10)/2 = 0.50 — looks decent<br>
+        Harmonic mean (F1) = 2×(0.90×0.10)/(0.90+0.10) = 0.18 — correctly shows it's terrible<br>
+        The harmonic mean heavily penalizes extreme imbalances between precision and recall, making it a more honest single metric.
+      </div>
+    </div>
+
+    <div class="explain">
+      <div class="explain-title">🔹 cm.ravel() — What it does</div>
+      <div class="explain-body">
+        <code>confusion_matrix()</code> returns a 2D array: [[TN, FP], [FN, TP]]<br>
+        <code>.ravel()</code> flattens 2D to 1D: [TN, FP, FN, TP]<br>
+        Python tuple unpacking: <code>tn, fp, fn, tp = [850, 115, 127, 317]</code><br>
+        Assigns each value to a named variable — much cleaner than <code>cm[0][0]</code>, <code>cm[0][1]</code> etc.
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Evaluation Summary</h3>
+    <table>
+      <tr><th>Metric</th><th>Score</th><th>Interpretation</th></tr>
+      <tr><td>Accuracy</td><td>~82%</td><td>High but partially misleading — imbalanced classes</td></tr>
+      <tr><td>Precision</td><td>~67%</td><td>Of predicted churners, 67% actually churned</td></tr>
+      <tr><td>Recall</td><td>~64%</td><td>Caught 64% of actual churners — most important metric</td></tr>
+      <tr><td class="good">F1-Score</td><td class="good">~66.75%</td><td class="good">Primary metric — improved from 65.56% baseline</td></tr>
+      <tr><td>ROC-AUC</td><td class="good">&gt; 85%</td><td class="good">Strong discrimination power confirmed</td></tr>
+    </table>
+    <blockquote>The precision-recall curve shows that lowering the decision threshold below 0.5 could improve recall further — worth considering in production given the high cost of missed churners (~$900/year each).</blockquote>
+  </div>
+</div>
+
+<!-- ==================== SECTION 8 ==================== -->
+<div id="s8" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 8</div>
+    <div class="sec-title">Business Insights & Recommendations</div>
+    <div class="sec-desc">Translating ML predictions into financial impact, risk tiers, and actionable retention strategies.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 Objective</h3>
+    <p>A model with 66.75% F1 means nothing to a business manager. This section converts model outputs into the language of business: <strong>Which customers need attention today? How much revenue is at stake? Is a retention campaign financially justified? What specifically should we do?</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Customer Risk Score System</div>
+    <table>
+      <tr><th>Risk Tier</th><th>Threshold</th><th>Business Action</th><th>Cost</th></tr>
+      <tr><td>🔴 High Risk</td><td>Churn prob ≥ 70%</td><td>Immediate intervention — personal call, offer discount</td><td>~$20/customer</td></tr>
+      <tr><td>🟡 Medium Risk</td><td>40–70%</td><td>Monitor + targeted email/SMS campaign</td><td>~$5/customer</td></tr>
+      <tr><td>🟢 Low Risk</td><td>&lt; 40%</td><td>Standard service — no special action needed</td><td>$0</td></tr>
+    </table>
+    <div class="explain">
+      <div class="explain-title">🔹 def assign_risk(prob) — Why tiers instead of raw probabilities?</div>
+      <div class="explain-body">
+        Raw probabilities (0.823, 0.412, 0.156) are meaningless to business teams who don't understand ML. Risk tiers (🔴 High Risk) are immediately actionable — a CRM system can automatically trigger workflows based on them. The .apply() method passes each customer's probability through the function one at a time — like a vectorized for loop.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 df_original.loc[X_test.index, 'Monthly Charge'] — Why reload original CSV?</div>
+      <div class="explain-body">
+        StandardScaler transformed Monthly Charge into z-scores (-0.23, 1.45) during preprocessing — meaningless for dollar calculations. We use <code>.loc[X_test.index]</code> to retrieve original dollar amounts for exactly the same customers using their original row indices — guaranteeing perfect alignment between churn probabilities and revenue figures.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 .groupby('Risk_Tier')['Monthly_Charge'].agg(Customers='count', Total='sum', Avg='mean')</div>
+      <div class="explain-body">
+        <code>.agg()</code> applies multiple aggregation functions in ONE operation instead of calling .count(), .sum(), .mean() separately. Each argument names the result column. Efficient and produces a complete financial summary of each risk tier in a single line.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 hasattr(final_model, 'feature_importances_') — Why check this?</div>
+      <div class="explain-body">
+        Tree models (Gradient Boosting, XGBoost) have <code>.feature_importances_</code> built-in.<br>
+        Linear models (Logistic Regression) have <code>.coef_</code> instead.<br>
+        <code>hasattr()</code> dynamically checks which attribute exists — making the code robust regardless of which model wins. Without this check, the code would crash if a linear model was selected as final best.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">💰</span> Retention ROI Logic</div>
+    <div class="explain">
+      <div class="explain-title">🔹 Break-even analysis — Is the campaign profitable?</div>
+      <div class="explain-body">
+        Campaign cost = $20 × number of high-risk customers<br>
+        Revenue saved = high_risk_monthly × retention_rate × 12<br>
+        If even 10% of high-risk customers are retained: annual savings &gt; campaign cost → profitable ✅<br>
+        This proves the model isn't just academically interesting — it's <strong>financially justified</strong>.
+      </div>
+    </div>
+    <div class="explain">
+      <div class="explain-title">🔹 pd.cut() — Converting tenure to groups</div>
+      <div class="explain-body">
+        <code>pd.cut(values, bins, labels)</code> converts continuous numeric values (tenure: 1-72) into categorical buckets (0-12m, 13-24m, etc.). <code>observed=True</code> prevents pandas from showing empty groups — required in newer pandas versions to avoid FutureWarning. This enables the business validation chart showing churn rate by tenure group.
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Business Insights Summary</h3>
+    <table>
+      <tr><th>Priority</th><th>Insight from Model</th><th>Recommended Action</th><th>Expected Impact</th></tr>
+      <tr><td><span class="hl-r">🔴 High</span></td><td>Month-to-Month customers churn at 46%</td><td>Offer discounted 1-year contract upgrades</td><td>Reduce churn 20–30%</td></tr>
+      <tr><td><span class="hl-r">🔴 High</span></td><td>New customers (0–12 months) most vulnerable</td><td>Deploy onboarding loyalty programs in first 3 months</td><td>Increase early retention</td></tr>
+      <tr><td><span class="hl-y">🟡 Medium</span></td><td>High monthly charges drive churn</td><td>Loyalty discounts for customers paying above average</td><td>Retain high-value segment</td></tr>
+      <tr><td><span class="hl-y">🟡 Medium</span></td><td>Fiber Optic churn rate 41%</td><td>Improve Fiber quality, proactive complaint resolution</td><td>Reduce premium churn</td></tr>
+      <tr><td><span class="hl-g">🟢 Low</span></td><td>Low referral count correlates with churn</td><td>Launch referral reward program</td><td>Boost engagement & loyalty</td></tr>
+    </table>
+    <blockquote>The model independently rediscovered the same patterns found in EDA — Tenure, Monthly Charge, and Contract Type are the top drivers. This consistency between visual analysis and ML output confirms the model learned genuine business signals.</blockquote>
+  </div>
+</div>
+
+<!-- ==================== SECTION 9 ==================== -->
+<div id="s9" class="tab-content">
+  <div class="sec-header">
+    <div class="sec-label">Section 9</div>
+    <div class="sec-title">Conclusion</div>
+    <div class="sec-desc">Project summary, key learnings, limitations, and future improvements.</div>
+  </div>
+
+  <div class="objective-box">
+    <h3>🎯 What This Project Achieved</h3>
+    <p>We built a complete, production-ready churn prediction system from raw data to business insights. The system identifies at-risk customers before they leave, quantifies revenue at stake, and provides prioritized retention recommendations — transforming churn management from reactive to predictive.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🏆</span> Final Model Performance</div>
+    <div class="metric-row">
+      <div class="metric-box"><div class="metric-name">Accuracy</div><div class="metric-val" style="color:var(--text)">~82%</div></div>
+      <div class="metric-box"><div class="metric-name">Precision</div><div class="metric-val" style="color:var(--yellow)">~67%</div></div>
+      <div class="metric-box"><div class="metric-name">Recall</div><div class="metric-val" style="color:var(--accent)">~64%</div></div>
+      <div class="metric-box primary"><div class="metric-name">F1-Score</div><div class="metric-val">~67%</div></div>
+      <div class="metric-box"><div class="metric-name">ROC-AUC</div><div class="metric-val" style="color:var(--green)">&gt;85%</div></div>
+    </div>
+    <p style="color:var(--text2); font-size:13px; margin-top:12px;"><strong style="color:var(--accent)">Best Model:</strong> Gradient Boosting (Optimized with SMOTE + RandomizedSearchCV)</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🗝️</span> Key Learnings from Each Section</div>
+    <div class="step"><div class="step-num">S1</div><div class="step-body"><div class="step-title">Data Loading</div><div class="step-desc">Class imbalance (26.5% churn) detected early — directly shaped our optimization strategy with SMOTE.</div></div></div>
+    <div class="step"><div class="step-num">S2</div><div class="step-body"><div class="step-title">Preprocessing</div><div class="step-desc">Domain-knowledge imputation (not statistical) preserved business meaning. Leakage removal was critical for honest modeling.</div></div></div>
+    <div class="step"><div class="step-num">S3</div><div class="step-body"><div class="step-title">EDA</div><div class="step-desc">Month-to-Month contracts (46% churn) and new customers (&lt;12 months) are the highest risk segments. Price sensitivity is real.</div></div></div>
+    <div class="step"><div class="step-num">S4</div><div class="step-body"><div class="step-title">Feature Selection</div><div class="step-desc">RFE reduced 35+ features to 15 (57% reduction). Top features confirmed EDA findings — genuine signals validated.</div></div></div>
+    <div class="step"><div class="step-num">S5</div><div class="step-body"><div class="step-title">Model Building</div><div class="step-desc">Boosting algorithms outperformed all others. Sequential error correction handles churn patterns better than parallel voting.</div></div></div>
+    <div class="step"><div class="step-num">S6</div><div class="step-body"><div class="step-title">Optimization</div><div class="step-desc">SMOTE + hyperparameter tuning proved class imbalance was the bottleneck, not algorithm limitations.</div></div></div>
+    <div class="step"><div class="step-num">S7</div><div class="step-body"><div class="step-title">Evaluation</div><div class="step-desc">Recall is the most business-critical metric — each missed churner costs ~$900/year. ROC-AUC &gt;85% confirms genuine discrimination.</div></div></div>
+    <div class="step"><div class="step-num">S8</div><div class="step-body"><div class="step-title">Business Insights</div><div class="step-desc">Retention campaign breaks even at just 10% effectiveness — highly profitable. Model findings directly map to actionable strategy.</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Limitations</div>
+    <table>
+      <tr><th>Limitation</th><th>Impact</th><th>How to Address</th></tr>
+      <tr><td>Single dataset snapshot</td><td>Customer behavior changes over time</td><td>Retrain model every 6 months</td></tr>
+      <tr><td>Geographic bias</td><td>Patterns may not generalize to other regions</td><td>Collect multi-region data</td></tr>
+      <tr><td>No temporal features</td><td>Missing seasonal patterns</td><td>Add month/quarter as features</td></tr>
+      <tr><td>$20 campaign cost assumption</td><td>Real costs may be higher ($50-150)</td><td>Use actual CRM cost data</td></tr>
+      <tr><td>Binary target simplification</td><td>'Joined' customers grouped with 'Stayed'</td><td>Build separate new-customer model</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🚀</span> Future Improvements</div>
+    <div class="grid-2">
+      <div>
+        <p style="font-size:13px; font-weight:600; color:var(--accent); margin-bottom:10px;">Technical Improvements</p>
+        <p style="color:var(--text2); font-size:13px; line-height:1.9;">
+          → Add LightGBM and CatBoost for comparison<br>
+          → Implement threshold optimization (not fixed 0.5)<br>
+          → Try deep learning (Neural Network) for comparison<br>
+          → Use time-series features (change in usage over time)<br>
+          → Implement SHAP values for individual explainability
+        </p>
+      </div>
+      <div>
+        <p style="font-size:13px; font-weight:600; color:var(--green); margin-bottom:10px;">Business Improvements</p>
+        <p style="color:var(--text2); font-size:13px; line-height:1.9;">
+          → Integrate with CRM for automated flagging<br>
+          → A/B test retention offers by risk tier<br>
+          → Track model accuracy vs actual churn monthly<br>
+          → Build real-time scoring API<br>
+          → Segment by customer lifetime value × churn risk
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="finding-box">
+    <h3>📋 Final Conclusion</h3>
+    <p style="color:var(--text2); font-size:14px; line-height:1.9; margin-bottom:12px;">
+      This project successfully built a machine learning system that predicts customer churn with <span class="hl-g">F1-Score of ~67%</span> and <span class="hl-g">ROC-AUC &gt;85%</span>. The system identifies high-risk customers before they leave, quantifies revenue at stake, and provides data-driven retention recommendations.
+    </p>
+    <p style="color:var(--text2); font-size:14px; line-height:1.9; margin-bottom:12px;">
+      The most important technical finding: <span class="hl">class imbalance was the primary bottleneck</span>, not algorithm choice. SMOTE correction produced the largest performance improvement. Among all 8 algorithms, <span class="hl">Gradient Boosting's sequential error-correction</span> best captured the complex non-linear patterns in churn behavior.
+    </p>
+    <p style="color:var(--text2); font-size:14px; line-height:1.9;">
+      The most important business finding: <span class="hl-y">Month-to-Month contract customers and new customers in their first 12 months</span> are the highest priority retention targets. A campaign retaining just 10% of high-risk customers covers its own cost many times over — making this model's deployment not just technically sound, but financially compelling.
+    </p>
+    <blockquote style="margin-top:16px; font-style:normal; font-weight:600; color:var(--text);">"The goal of this project was never to achieve perfect accuracy — it was to help a business make better decisions about which customers to fight for. That goal was achieved."</blockquote>
+  </div>
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
